@@ -9,6 +9,7 @@ class TrivyPlugin : Plugin<Project> {
         val extension = project.extensions.create("trivy", TrivyExtension::class.java)
 
         extension.sbomOutputFile.convention(project.layout.buildDirectory.file("reports/sbom.cdx.json"))
+        extension.licenseOutputFile.convention(project.layout.buildDirectory.file("reports/license-report.json"))
 
         val gradleCaches = File(project.gradle.gradleUserHomeDir, "caches/trivy")
         val defaultInstallDir = project.layout.dir(
@@ -119,6 +120,27 @@ class TrivyPlugin : Plugin<Project> {
             it.excludeDirs.set(extension.excludeDirs)
             it.skipFiles.set(extension.skipFiles)
             it.ignoreFile.set(extension.ignoreFile.map { f -> f.asFile.absolutePath })
+            it.additionalArgs.set(extension.additionalArgs)
+        }
+
+        project.tasks.register("trivyLicenseCheck", TrivyLicenseCheckTask::class.java) {
+            it.group = "trivy"
+            it.description = "Checks dependencies for forbidden or restricted licenses"
+            it.dependsOn(downloadTask, gradleTask, npmTask)
+            it.trivyBinary.set(effectiveBinary)
+            it.scanTarget.set(scanTargetDir)
+            it.lockFilesDir.set(project.layout.buildDirectory.dir("trivy-locks"))
+            it.outputFormat.set(extension.licenseOutputFormat)
+            it.outputFile.set(extension.licenseOutputFile)
+            it.failOnForbidden.set(extension.licenseFailOnForbidden)
+            it.forbiddenCategories.set(extension.licenseForbiddenCategories)
+            it.forbiddenLicenses.set(extension.licenseForbiddenLicenses)
+            it.allowedLicenses.set(extension.licenseAllowedLicenses)
+            it.cacheDir.set(extension.cacheDir.map { d -> d.asFile.absolutePath })
+            it.skipDbUpdate.set(extension.skipDbUpdate)
+            it.dbRepository.set(extension.dbRepository)
+            it.excludeDirs.set(extension.excludeDirs)
+            it.skipFiles.set(extension.skipFiles)
             it.additionalArgs.set(extension.additionalArgs)
         }
     }

@@ -54,8 +54,9 @@ trivy {
 | `trivyLockGradle` | Generates `gradle.lockfile` for all Gradle projects in the scan target |
 | `trivyScan` | Runs `trivy fs` against the project |
 | `trivySbom` | Generates a Software Bill of Materials (SBOM) in CycloneDX or SPDX format |
+| `trivyLicenseCheck` | Checks dependencies for forbidden or restricted licenses |
 
-`trivyScan` and `trivySbom` automatically depend on the download and lock tasks — you only need to run `trivyScan` or `trivySbom`.
+`trivyScan`, `trivySbom`, and `trivyLicenseCheck` automatically depend on the download and lock tasks — you only need to run the task you want.
 
 ## Configuration
 
@@ -180,6 +181,46 @@ Both `trivyScan` and `trivySbom` reuse the same generated lock files, so you can
 
 ```bash
 ./gradlew trivyScan trivySbom
+```
+
+### License compliance check
+
+Check dependencies for forbidden licenses (CRA, ISO 27001 A.5.19):
+
+```bash
+./gradlew trivyLicenseCheck
+```
+
+The build fails if dependencies with restricted or forbidden licenses are detected. Configure the policy:
+
+```kotlin
+trivy {
+    // License categories to forbid (default: ["restricted", "forbidden"])
+    // Trivy categories: forbidden, restricted, reciprocal, notice, permissive, unencumbered, unknown
+    licenseForbiddenCategories.set(listOf("restricted", "forbidden"))
+
+    // Specific SPDX IDs to forbid regardless of category
+    licenseForbiddenLicenses.set(listOf("GPL-3.0-only", "AGPL-3.0-only"))
+
+    // Specific SPDX IDs to allow even if their category is forbidden
+    // (e.g., LGPL for dynamic linking)
+    licenseAllowedLicenses.set(listOf("LGPL-2.1-only"))
+
+    // Fail on forbidden licenses (default: true)
+    licenseFailOnForbidden.set(true)
+
+    // Output format: "json" (default), "table", "sarif"
+    licenseOutputFormat.set("json")
+
+    // Output file (default: build/reports/license-report.json)
+    licenseOutputFile.set(layout.buildDirectory.file("reports/license-report.json"))
+}
+```
+
+Run all security tasks together:
+
+```bash
+./gradlew trivyScan trivySbom trivyLicenseCheck
 ```
 
 ## Multi-project builds

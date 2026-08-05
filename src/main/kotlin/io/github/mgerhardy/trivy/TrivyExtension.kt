@@ -42,6 +42,14 @@ abstract class TrivyExtension {
     abstract val sbomFormat: Property<String>
     abstract val sbomOutputFile: RegularFileProperty
 
+    // License compliance check
+    abstract val licenseOutputFormat: Property<String>
+    abstract val licenseOutputFile: RegularFileProperty
+    abstract val licenseFailOnForbidden: Property<Boolean>
+    abstract val licenseForbiddenCategories: ListProperty<String>
+    abstract val licenseForbiddenLicenses: ListProperty<String>
+    abstract val licenseAllowedLicenses: ListProperty<String>
+
     // Exclude specific subproject paths from lock generation
     abstract val excludeProjects: ListProperty<String>
 
@@ -64,6 +72,11 @@ abstract class TrivyExtension {
         ignoreUnfixed.convention(false)
         maxParallelLocks.convention(4)
         sbomFormat.convention("cyclonedx")
+        licenseOutputFormat.convention("json")
+        licenseFailOnForbidden.convention(true)
+        licenseForbiddenCategories.convention(listOf("restricted", "forbidden"))
+        licenseForbiddenLicenses.convention(emptyList())
+        licenseAllowedLicenses.convention(emptyList())
         excludeProjects.convention(emptyList())
         perProjectTimeoutSeconds.convention(300)
     }
