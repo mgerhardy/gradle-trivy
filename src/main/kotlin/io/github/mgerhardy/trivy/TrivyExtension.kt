@@ -50,6 +50,14 @@ abstract class TrivyExtension {
     abstract val licenseForbiddenLicenses: ListProperty<String>
     abstract val licenseAllowedLicenses: ListProperty<String>
 
+    // Secret scanning
+    abstract val secretOutputFormat: Property<String>
+    abstract val secretOutputFile: RegularFileProperty
+    abstract val secretFailOnSecret: Property<Boolean>
+    abstract val secretSeverity: Property<String>
+    abstract val secretExcludeDirs: ListProperty<String>
+    abstract val secretSkipFiles: ListProperty<String>
+
     // Exclude specific subproject paths from lock generation
     abstract val excludeProjects: ListProperty<String>
 
@@ -77,6 +85,11 @@ abstract class TrivyExtension {
         licenseForbiddenCategories.convention(listOf("restricted", "forbidden"))
         licenseForbiddenLicenses.convention(emptyList())
         licenseAllowedLicenses.convention(emptyList())
+        secretOutputFormat.convention("json")
+        secretFailOnSecret.convention(true)
+        secretSeverity.convention("HIGH,CRITICAL")
+        secretExcludeDirs.convention(listOf(".git", ".gradle", "node_modules", "build"))
+        secretSkipFiles.convention(emptyList())
         excludeProjects.convention(emptyList())
         perProjectTimeoutSeconds.convention(300)
     }

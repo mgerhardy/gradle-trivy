@@ -52,11 +52,12 @@ trivy {
 | `trivyDownload` | Downloads the Trivy binary for your platform |
 | `trivyLockNpm` | Generates `package-lock.json` for npm projects |
 | `trivyLockGradle` | Generates `gradle.lockfile` for all Gradle projects in the scan target |
-| `trivyScan` | Runs `trivy fs` against the project |
+| `trivyScan` | Runs `trivy fs` vulnerability scan against the project |
 | `trivySbom` | Generates a Software Bill of Materials (SBOM) in CycloneDX or SPDX format |
 | `trivyLicenseCheck` | Checks dependencies for forbidden or restricted licenses |
+| `trivySecretScan` | Scans source code for hardcoded secrets (API keys, tokens, private keys) |
 
-`trivyScan`, `trivySbom`, and `trivyLicenseCheck` automatically depend on the download and lock tasks — you only need to run the task you want.
+`trivyScan`, `trivySbom`, and `trivyLicenseCheck` depend on lock file generation. `trivySecretScan` only needs the Trivy binary (no lock files — it scans source directly).
 
 ## Configuration
 
@@ -221,6 +222,47 @@ Run all security tasks together:
 
 ```bash
 ./gradlew trivyScan trivySbom trivyLicenseCheck
+```
+
+### Secret scanning
+
+Detect hardcoded secrets in source code (ISO 27001 A.8.9, A.8.28):
+
+```bash
+./gradlew trivySecretScan
+```
+
+The build fails if secrets (API keys, private keys, tokens, passwords) are found in source files. This replaces the need for GitLab's Secret Detection template or standalone gitleaks.
+
+```kotlin
+trivy {
+    // Fail on detected secrets (default: true)
+    secretFailOnSecret.set(true)
+
+    // Severity filter (default: "HIGH,CRITICAL")
+    secretSeverity.set("MEDIUM,HIGH,CRITICAL")
+
+    // Directories to skip (default: [".git", ".gradle", "node_modules", "build"])
+    secretExcludeDirs.set(listOf(".git", ".gradle", "node_modules", "build", "tmp"))
+
+    // Specific files to skip (e.g., test fixtures with fake secrets)
+    secretSkipFiles.set(listOf("src/test/resources/fake-credentials.properties"))
+
+    // Output format: "json" (default), "table", "sarif"
+    secretOutputFormat.set("json")
+
+    // Output file (default: build/reports/secret-report.json)
+    secretOutputFile.set(layout.buildDirectory.file("reports/secret-report.json"))
+}
+```
+
+> **Note:** `trivySecretScan` does not need lock files — it scans source files directly for
+> patterns matching known secret formats. It only depends on the Trivy binary download.
+
+Run the full compliance suite:
+
+```bash
+./gradlew trivyScan trivySbom trivyLicenseCheck trivySecretScan
 ```
 
 ## Multi-project builds

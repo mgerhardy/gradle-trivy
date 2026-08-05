@@ -10,6 +10,7 @@ class TrivyPlugin : Plugin<Project> {
 
         extension.sbomOutputFile.convention(project.layout.buildDirectory.file("reports/sbom.cdx.json"))
         extension.licenseOutputFile.convention(project.layout.buildDirectory.file("reports/license-report.json"))
+        extension.secretOutputFile.convention(project.layout.buildDirectory.file("reports/secret-report.json"))
 
         val gradleCaches = File(project.gradle.gradleUserHomeDir, "caches/trivy")
         val defaultInstallDir = project.layout.dir(
@@ -141,6 +142,22 @@ class TrivyPlugin : Plugin<Project> {
             it.dbRepository.set(extension.dbRepository)
             it.excludeDirs.set(extension.excludeDirs)
             it.skipFiles.set(extension.skipFiles)
+            it.additionalArgs.set(extension.additionalArgs)
+        }
+
+        project.tasks.register("trivySecretScan", TrivySecretScanTask::class.java) {
+            it.group = "trivy"
+            it.description = "Scans source code for hardcoded secrets (API keys, tokens, private keys)"
+            it.dependsOn(downloadTask)
+            it.trivyBinary.set(effectiveBinary)
+            it.scanTarget.set(scanTargetDir)
+            it.outputFormat.set(extension.secretOutputFormat)
+            it.outputFile.set(extension.secretOutputFile)
+            it.failOnSecret.set(extension.secretFailOnSecret)
+            it.severity.set(extension.secretSeverity)
+            it.cacheDir.set(extension.cacheDir.map { d -> d.asFile.absolutePath })
+            it.excludeDirs.set(extension.secretExcludeDirs)
+            it.skipFiles.set(extension.secretSkipFiles)
             it.additionalArgs.set(extension.additionalArgs)
         }
     }
