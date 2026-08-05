@@ -8,6 +8,8 @@ class TrivyPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val extension = project.extensions.create("trivy", TrivyExtension::class.java)
 
+        extension.sbomOutputFile.convention(project.layout.buildDirectory.file("reports/sbom.cdx.json"))
+
         val gradleCaches = File(project.gradle.gradleUserHomeDir, "caches/trivy")
         val defaultInstallDir = project.layout.dir(
             extension.version.map { File(gradleCaches, "bin/$it") }
@@ -100,6 +102,24 @@ class TrivyPlugin : Plugin<Project> {
             it.ignoreFile.set(extension.ignoreFile.map { f -> f.asFile.absolutePath })
             it.scanners.set(extension.scanners)
             it.ignoreUnfixed.set(extension.ignoreUnfixed)
+        }
+
+        project.tasks.register("trivySbom", TrivySbomTask::class.java) {
+            it.group = "trivy"
+            it.description = "Generates a Software Bill of Materials (SBOM) in CycloneDX or SPDX format"
+            it.dependsOn(downloadTask, gradleTask, npmTask)
+            it.trivyBinary.set(effectiveBinary)
+            it.scanTarget.set(scanTargetDir)
+            it.lockFilesDir.set(project.layout.buildDirectory.dir("trivy-locks"))
+            it.sbomFormat.set(extension.sbomFormat)
+            it.outputFile.set(extension.sbomOutputFile)
+            it.cacheDir.set(extension.cacheDir.map { d -> d.asFile.absolutePath })
+            it.skipDbUpdate.set(extension.skipDbUpdate)
+            it.dbRepository.set(extension.dbRepository)
+            it.excludeDirs.set(extension.excludeDirs)
+            it.skipFiles.set(extension.skipFiles)
+            it.ignoreFile.set(extension.ignoreFile.map { f -> f.asFile.absolutePath })
+            it.additionalArgs.set(extension.additionalArgs)
         }
     }
 }

@@ -38,6 +38,10 @@ abstract class TrivyExtension {
     // #10: Parallel lock generation
     abstract val maxParallelLocks: Property<Int>
 
+    // SBOM generation
+    abstract val sbomFormat: Property<String>
+    abstract val sbomOutputFile: RegularFileProperty
+
     // Exclude specific subproject paths from lock generation
     abstract val excludeProjects: ListProperty<String>
 
@@ -59,6 +63,7 @@ abstract class TrivyExtension {
         skipFiles.convention(emptyList())
         ignoreUnfixed.convention(false)
         maxParallelLocks.convention(4)
+        sbomFormat.convention("cyclonedx")
         excludeProjects.convention(emptyList())
         perProjectTimeoutSeconds.convention(300)
     }

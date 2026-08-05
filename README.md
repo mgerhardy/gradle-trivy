@@ -50,11 +50,12 @@ trivy {
 | Task | Description |
 |------|-------------|
 | `trivyDownload` | Downloads the Trivy binary for your platform |
-| `trivyLockNpm` | Generates `package-lock.json` via `npm install --package-lock-only` |
+| `trivyLockNpm` | Generates `package-lock.json` for npm projects |
 | `trivyLockGradle` | Generates `gradle.lockfile` for all Gradle projects in the scan target |
 | `trivyScan` | Runs `trivy fs` against the project |
+| `trivySbom` | Generates a Software Bill of Materials (SBOM) in CycloneDX or SPDX format |
 
-`trivyScan` automatically depends on all other tasks — you only need to run `trivyScan`.
+`trivyScan` and `trivySbom` automatically depend on the download and lock tasks — you only need to run `trivyScan` or `trivySbom`.
 
 ## Configuration
 
@@ -141,11 +142,44 @@ trivy {
     // Scanners to use: vuln, misconfig, secret, license (default: trivy default)
     scanners.set("vuln,secret")
 
+    // --- SBOM ---
+
+    // SBOM output format: "cyclonedx" (default) or "spdx-json"
+    sbomFormat.set("cyclonedx")
+
+    // Output file for the SBOM (default: build/reports/sbom.cdx.json)
+    sbomOutputFile.set(layout.buildDirectory.file("reports/sbom.cdx.json"))
+
     // --- Performance ---
 
     // Max parallel Gradle lock file generation processes (default: 4)
     maxParallelLocks.set(4)
 }
+```
+
+### SBOM generation
+
+Generate a CycloneDX SBOM for compliance (CRA, ISO 27001, DORA):
+
+```bash
+./gradlew trivySbom
+```
+
+This produces `build/reports/sbom.cdx.json` (CycloneDX format) by default. The SBOM includes all resolved first-party and third-party dependencies with license information.
+
+To generate SPDX format instead:
+
+```kotlin
+trivy {
+    sbomFormat.set("spdx-json")
+    sbomOutputFile.set(layout.buildDirectory.file("reports/sbom.spdx.json"))
+}
+```
+
+Both `trivyScan` and `trivySbom` reuse the same generated lock files, so you can run them together efficiently:
+
+```bash
+./gradlew trivyScan trivySbom
 ```
 
 ## Multi-project builds
