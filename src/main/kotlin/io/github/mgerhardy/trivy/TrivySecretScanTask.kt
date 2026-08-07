@@ -106,6 +106,10 @@ abstract class TrivySecretScanTask @Inject constructor(
         args.addAll(additionalArgs.get())
         args.add(target.absolutePath)
 
+        if (outputFile.isPresent) {
+            outputFile.get().asFile.parentFile.mkdirs()
+        }
+
         logger.lifecycle("Running secret scan on ${target.absolutePath} (severity: ${severity.get()})")
         val result = execOps.exec { spec ->
             spec.commandLine(args)

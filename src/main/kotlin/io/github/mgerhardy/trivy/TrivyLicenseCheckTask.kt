@@ -159,6 +159,10 @@ abstract class TrivyLicenseCheckTask @Inject constructor(
             args.addAll(additionalArgs.get())
             args.add(target.absolutePath)
 
+            if (outputFile.isPresent) {
+                outputFile.get().asFile.parentFile.mkdirs()
+            }
+
             logger.lifecycle("Running license compliance check on ${target.absolutePath}")
             val result = execOps.exec { spec ->
                 spec.commandLine(args)

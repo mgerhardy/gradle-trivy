@@ -119,6 +119,7 @@ abstract class TrivySbomTask @Inject constructor(
             args.add(target.absolutePath)
 
             logger.lifecycle("Generating SBOM ($format) for ${target.absolutePath}")
+            outputFile.get().asFile.parentFile.mkdirs()
             val result = execOps.exec { spec ->
                 spec.commandLine(args)
                 spec.isIgnoreExitValue = true
