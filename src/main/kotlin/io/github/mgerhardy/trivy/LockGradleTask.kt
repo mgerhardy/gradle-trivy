@@ -134,7 +134,6 @@ abstract class LockGradleTask @Inject constructor(
                     if (!gradlew.exists()) {
                         if (sourceGradlew.exists()) {
                             sourceGradlew.copyTo(gradlew, overwrite = true)
-                            if (!isWindows) gradlew.setExecutable(true)
                         } else {
                             logger.warn("  Skipping ${projectDir.relativeTo(root)}: no gradlew script available to provision")
                             return@submit
@@ -173,7 +172,9 @@ abstract class LockGradleTask @Inject constructor(
                         return@submit
                     }
                     if (process.exitValue() != 0) {
-                        val errMsg = stderrFuture.get().lines().firstOrNull { it.isNotBlank() } ?: "unknown error"
+                        val errMsg = stderrFuture.get().lines()
+                            .filter { it.isNotBlank() && !it.startsWith("Picked up JAVA_TOOL_OPTIONS") }
+                            .firstOrNull() ?: "exit code ${process.exitValue()}"
                         logger.warn("  Failed in $label: $errMsg")
                     }
                 } catch (e: Exception) {
