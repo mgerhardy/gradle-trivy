@@ -65,7 +65,7 @@ abstract class TrivyExtension {
     abstract val perProjectTimeoutSeconds: Property<Long>
 
     init {
-        version.convention("0.70.0")
+        version.convention("0.74.0")
         severity.convention("HIGH,CRITICAL")
         checkForUpdates.convention(false)
         additionalArgs.convention(emptyList())
